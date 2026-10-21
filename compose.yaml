@@ -7,6 +7,7 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql+psycopg://privacy_user:${POSTGRES_PASSWORD}@db:5432/privacymesh
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
     depends_on:
       - db
 

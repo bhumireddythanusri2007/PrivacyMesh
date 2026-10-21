@@ -4,5 +4,5 @@ uvicorn[standard]
 sqlalchemy
 psycopg[binary]
 python-dotenv
-passlib[bcrypt]
+pwdlib[argon2]
 PyJWT
