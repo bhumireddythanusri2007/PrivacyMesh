@@ -1,20 +1,12 @@
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.database import SessionLocal
+from app.database import get_db
 from app.models import User, Transaction, KYCRecord
+from app.schemas import UserResponse
 from app.security import get_current_user
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 def require_admin(current_user: dict = Depends(get_current_user)):
@@ -38,19 +30,9 @@ def get_admin_summary(
     }
 
 
-@router.get("/users")
+@router.get("/users", response_model=list[UserResponse])
 def get_all_users(
     admin: dict = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    users = db.query(User).order_by(User.id).all()
-
-    return [
-        {
-            "id": user.id,
-            "username": user.username,
-            "role": user.role,
-            "created_at": user.created_at,
-        }
-        for user in users
-    ]
+    return db.query(User).order_by(User.id).all()

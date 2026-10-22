@@ -1,21 +1,12 @@
-
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from app.database import SessionLocal
+from app.database import get_db
 from app.models import Transaction
 from app.schemas import TransactionCreate, TransactionResponse
 from app.security import get_current_user
 
 router = APIRouter(prefix="/transactions", tags=["Transactions"])
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 @router.post(

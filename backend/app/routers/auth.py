@@ -1,8 +1,7 @@
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.database import SessionLocal
+from app.database import get_db
 from app.models import User
 from app.schemas import UserCreate, UserLogin, UserResponse
 from app.security import (
@@ -14,15 +13,7 @@ from app.security import (
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-@router.post("/register", response_model=UserResponse, status_code=201)
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register_user(
     user_data: UserCreate,
     db: Session = Depends(get_db),

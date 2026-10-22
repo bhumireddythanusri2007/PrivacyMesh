@@ -1,30 +1,29 @@
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.database import SessionLocal
+from app.database import get_db
 from app.models import KYCRecord
+from app.schemas import KYCRecordResponse
 from app.security import get_current_user
 
 router = APIRouter(prefix="/kyc", tags=["KYC"])
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=KYCRecordResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_kyc_record(
     customer_ref: str,
     document_type: str,
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    if not customer_ref.strip() or not document_type.strip():
+    trimmed_ref = customer_ref.strip()
+    trimmed_doc = document_type.strip()
+
+    if not trimmed_ref or not trimmed_doc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Customer reference and document type are required",
@@ -32,7 +31,7 @@ def create_kyc_record(
 
     existing_record = (
         db.query(KYCRecord)
-        .filter(KYCRecord.customer_ref == customer_ref)
+        .filter(KYCRecord.customer_ref == trimmed_ref)
         .first()
     )
 
@@ -44,8 +43,8 @@ def create_kyc_record(
 
     record = KYCRecord(
         user_id=current_user["id"],
-        customer_ref=customer_ref,
-        document_type=document_type,
+        customer_ref=trimmed_ref,
+        document_type=trimmed_doc,
         verification_status="pending",
         risk_category="unassessed",
     )
@@ -54,18 +53,10 @@ def create_kyc_record(
     db.commit()
     db.refresh(record)
 
-    return {
-        "id": record.id,
-        "user_id": record.user_id,
-        "customer_ref": record.customer_ref,
-        "document_type": record.document_type,
-        "verification_status": record.verification_status,
-        "risk_category": record.risk_category,
-        "created_at": record.created_at,
-    }
+    return record
 
 
-@router.get("")
+@router.get("", response_model=list[KYCRecordResponse])
 def get_kyc_records(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),

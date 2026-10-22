@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from decimal import Decimal
 from typing import Literal
@@ -11,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class UserCreate(BaseModel):
     username: str = Field(min_length=3, max_length=100)
     password: str = Field(min_length=8, max_length=128)
-    role: Literal["user", "admin"] = "user"
+    role: Literal["user"] = "user"
 
 
 class UserLogin(BaseModel):
@@ -26,7 +25,6 @@ class UserResponse(BaseModel):
     username: str
     role: str
     created_at: datetime
-
 
 
 # ---------- Transaction schemas ----------
@@ -48,6 +46,7 @@ class TransactionResponse(BaseModel):
     status: str
     created_at: datetime
 
+
 # ---------- KYC schemas ----------
 
 class KYCRecordCreate(BaseModel):
@@ -59,6 +58,7 @@ class KYCRecordResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    user_id: int | None = None
     customer_ref: str
     document_type: str
     verification_status: str
