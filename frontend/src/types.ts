@@ -61,4 +61,59 @@ export interface HealthStatus {
   database?: string
 }
 
+export interface HardwareDetectionReport {
+  cpu_sgx_detected: boolean
+  cpu_sev_detected: boolean
+  sgx_device_nodes_found: string[]
+  sev_device_nodes_found: string[]
+  driver_initialized: boolean
+  attestation_configured: boolean
+  detection_summary: string
+}
+
+export interface DataTriadStatus {
+  data_at_rest: string
+  data_in_transit: string
+  data_in_use: string
+}
+
+export interface TEEStatusResponse {
+  status: 'simulation' | 'hardware_tee' | 'not_configured'
+  mode_label: string
+  operational_readiness: string
+  is_hardware_enclave: boolean
+  hardware_detection: HardwareDetectionReport
+  data_triad: DataTriadStatus
+  limitations: string[]
+}
+
+export interface SyntheticWorkloadInput {
+  account_id: string
+  monthly_income: number
+  requested_credit_amount: number
+  existing_obligations: number
+  risk_tier: 'low' | 'medium' | 'high'
+}
+
+export interface WorkloadExecutionStep {
+  step_number: number
+  phase: string
+  detail: string
+  simulated_isolation_boundary: string
+}
+
+export interface SyntheticWorkloadResult {
+  masked_account_id: string
+  monthly_income: string | number
+  requested_credit_amount: string | number
+  debt_to_income_ratio: number
+  credit_risk_score: number
+  approved: boolean
+  approved_limit: string | number
+  recommendation: string
+  execution_mode: string
+  execution_trace: WorkloadExecutionStep[]
+  timestamp: string
+}
+
 export type ActivePage = 'Dashboard' | 'Transactions' | 'KYC Records' | 'Security' | 'Admin'

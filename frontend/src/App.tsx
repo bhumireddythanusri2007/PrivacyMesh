@@ -150,7 +150,12 @@ function App() {
             />
           )}
 
-          {activePage === 'Security' && <SecurityView />}
+          {activePage === 'Security' && (
+            <SecurityView
+              user={user}
+              onOpenAuth={() => setIsAuthModalOpen(true)}
+            />
+          )}
 
           {activePage === 'Admin' && (
             <AdminView

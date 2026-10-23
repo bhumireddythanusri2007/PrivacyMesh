@@ -5,6 +5,9 @@ import type {
   HealthStatus,
   KYCRecord,
   ProtectedUserResponse,
+  SyntheticWorkloadInput,
+  SyntheticWorkloadResult,
+  TEEStatusResponse,
   Transaction,
   User,
   UserRole,
@@ -211,4 +214,24 @@ export async function fetchAdminSummary(): Promise<AdminSummary> {
 
 export async function fetchAdminUsers(): Promise<User[]> {
   return request<User[]>('/admin/users', {}, true)
+}
+
+// ----------------- Confidential Computing API -----------------
+
+export async function fetchTEEStatus(): Promise<TEEStatusResponse> {
+  return request<TEEStatusResponse>('/confidential-computing/status')
+}
+
+export async function runConfidentialDemo(
+  payload: SyntheticWorkloadInput
+): Promise<SyntheticWorkloadResult> {
+  return request<SyntheticWorkloadResult>(
+    '/confidential-computing/run-demo',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    },
+    true
+  )
 }

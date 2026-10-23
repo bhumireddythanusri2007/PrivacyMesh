@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.database import Base, check_database_connection, engine
-from app.routers import admin, auth, kyc, transactions
+from app.routers import admin, auth, confidential, kyc, transactions
 from app.security import get_current_user
 
 
@@ -45,6 +45,7 @@ app.include_router(auth.router)
 app.include_router(transactions.router)
 app.include_router(kyc.router)
 app.include_router(admin.router)
+app.include_router(confidential.router)
 
 
 @app.get("/")
