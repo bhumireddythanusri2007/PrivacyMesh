@@ -139,6 +139,65 @@ export const AuthModal: FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) =>
           </button>
         </div>
 
+        {/* Quick Demo Accounts Selection */}
+        {mode === 'login' && (
+          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">
+              Authorized Demo Roles
+            </p>
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setUsername('demo_customer')
+                  setPassword('CustomerPass2026!')
+                  setError(null)
+                }}
+                className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-left text-xs hover:border-blue-400 hover:bg-blue-50/50 transition"
+              >
+                <span className="block font-semibold text-slate-800">Customer</span>
+                <span className="block text-[10px] text-slate-400">demo_customer</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setUsername('demo_employee')
+                  setPassword('EmployeePass2026!')
+                  setError(null)
+                }}
+                className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-left text-xs hover:border-blue-400 hover:bg-blue-50/50 transition"
+              >
+                <span className="block font-semibold text-slate-800">Bank Employee</span>
+                <span className="block text-[10px] text-slate-400">demo_employee</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setUsername('demo_manager')
+                  setPassword('ManagerPass2026!')
+                  setError(null)
+                }}
+                className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-left text-xs hover:border-blue-400 hover:bg-blue-50/50 transition"
+              >
+                <span className="block font-semibold text-slate-800">Bank Manager</span>
+                <span className="block text-[10px] text-slate-400">demo_manager</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setUsername('demo_admin')
+                  setPassword('AdminPass2026!')
+                  setError(null)
+                }}
+                className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-left text-xs hover:border-blue-400 hover:bg-blue-50/50 transition"
+              >
+                <span className="block font-semibold text-slate-800">System Admin</span>
+                <span className="block text-[10px] text-slate-400">demo_admin</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Notifications */}
         {error && (
           <div className="mt-4 rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs font-medium text-rose-800">

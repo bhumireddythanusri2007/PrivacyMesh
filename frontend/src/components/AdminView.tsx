@@ -14,8 +14,10 @@ export const AdminView: FC<AdminViewProps> = ({ user, onOpenAuth }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const isAdmin = user?.role === 'admin' || user?.role === 'system_admin'
+
   const loadAdminData = async () => {
-    if (!user || user.role !== 'admin') return
+    if (!isAdmin) return
 
     setIsLoading(true)
     setError(null)
@@ -34,7 +36,7 @@ export const AdminView: FC<AdminViewProps> = ({ user, onOpenAuth }) => {
   }
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') return
+    if (!isAdmin) return
 
     let active = true
     const fetchData = async () => {
@@ -56,10 +58,10 @@ export const AdminView: FC<AdminViewProps> = ({ user, onOpenAuth }) => {
     return () => {
       active = false
     }
-  }, [user])
+  }, [isAdmin])
 
   // Non-admin or unauthenticated access guard
-  if (!user || user.role !== 'admin') {
+  if (!isAdmin) {
     return (
       <div className="rounded-2xl border border-rose-200 bg-rose-50/50 p-8 text-center max-w-xl mx-auto shadow-xs">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-rose-700">
@@ -67,7 +69,7 @@ export const AdminView: FC<AdminViewProps> = ({ user, onOpenAuth }) => {
         </div>
         <h3 className="mt-4 text-base font-bold text-rose-950">Access Restricted (HTTP 403)</h3>
         <p className="mt-1.5 text-xs text-rose-800 leading-5">
-          The administrative control plane is restricted exclusively to authenticated users with the <span className="font-semibold">admin</span> role. Standard participants cannot inspect global user records or administrative summaries.
+          The administrative control plane is restricted exclusively to authenticated users with the <span className="font-semibold">system_admin</span> role. Standard participants (customers, bank employees, and bank managers) cannot inspect global user records or administrative summaries.
         </p>
         {!user && (
           <button
@@ -94,7 +96,7 @@ export const AdminView: FC<AdminViewProps> = ({ user, onOpenAuth }) => {
             </span>
           </div>
           <p className="mt-0.5 text-xs text-slate-500">
-            System administration, global participant auditing, and security telemetry.
+            User-account administration, technical audit metadata, and security telemetry. KYC dossiers and review decisions remain restricted to bank staff.
           </p>
         </div>
 
@@ -142,7 +144,15 @@ export const AdminView: FC<AdminViewProps> = ({ user, onOpenAuth }) => {
           <p className="mt-2 text-2xl font-bold text-slate-900">
             {isLoading ? '...' : summary?.total_kyc_records ?? '—'}
           </p>
-          <p className="mt-1 text-[11px] text-slate-400">Customer verification records</p>
+          <p className="mt-1 text-[11px] text-slate-400">Legacy customer verification records (not KYC workflow submissions)</p>
+        </div>
+      </div>
+
+      {/* Security boundary notice */}
+      <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4 text-xs text-amber-900 flex items-start gap-3">
+        <span className="shrink-0 mt-0.5 font-bold text-amber-700">⚠</span>
+        <div>
+          <span className="font-bold">Least-Privilege Boundary:</span> System administrators manage users and system accounts only. Access to KYC workflow submissions, dossiers, internal compliance notes, officer review records, and final decisions is strictly prohibited for this role (HTTP 403). KYC content is accessible only to bank_employee, bank_manager, and the owning customer.
         </div>
       </div>
 
@@ -185,7 +195,7 @@ export const AdminView: FC<AdminViewProps> = ({ user, onOpenAuth }) => {
                     <td className="py-3.5 pr-4">
                       <span
                         className={`inline-block rounded-sm px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                          u.role === 'admin'
+                          u.role === 'admin' || u.role === 'system_admin'
                             ? 'bg-purple-100 text-purple-700'
                             : 'bg-slate-100 text-slate-700'
                         }`}

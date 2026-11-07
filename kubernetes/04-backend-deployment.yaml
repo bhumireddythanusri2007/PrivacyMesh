@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: privacymesh
+  labels:
+    app.kubernetes.io/name: privacymesh
+    app.kubernetes.io/component: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: privacymesh
+      app.kubernetes.io/component: backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: privacymesh
+        app.kubernetes.io/component: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8000"
+    spec:
+      containers:
+        - name: backend
+          image: privacymesh-backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: privacymesh-config
+                  key: POSTGRES_DB
+            - name: APP_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: privacymesh-secrets
+                  key: APP_DB_PASSWORD
+            - name: DATABASE_URL
+              value: "postgresql+psycopg://privacy_app:$(APP_DB_PASSWORD)@db:5432/$(POSTGRES_DB)"
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: privacymesh-secrets
+                  key: JWT_SECRET_KEY
+            - name: CORS_ORIGINS
+              valueFrom:
+                configMapKeyRef:
+                  name: privacymesh-config
+                  key: CORS_ORIGINS
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 2
+            periodSeconds: 2
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3

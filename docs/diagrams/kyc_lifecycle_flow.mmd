@@ -1,0 +1,63 @@
+sequenceDiagram
+    autonumber
+    actor Customer as 👤 Customer
+    actor Employee as 👔 Bank Employee
+    actor Manager as 💼 Bank Manager
+    actor Admin as 🛠️ System Admin
+    participant Frontend as 🌐 React 19 Frontend
+    participant Backend as 🚀 FastAPI Backend
+    participant DB as 🗄️ PostgreSQL (privacy_app)
+    participant K8s as ⚖️ K8s / HPA / Controller
+
+    Note over Customer,Admin: 1. Authentication & Session Establishment
+    Customer->>Frontend: Login (username + password)
+    Frontend->>Backend: POST /auth/login
+    Backend->>DB: Query user & verify Argon2id hash
+    Backend-->>Frontend: Return HS256 JWT Token (Role: customer)
+
+    Note over Customer,DB: 2. KYC Submission Creation
+    Customer->>Frontend: Submit KYC Dossier (Ref, ID docs)
+    Frontend->>Backend: POST /kyc/workflow/submissions (Bearer Token)
+    Backend->>DB: Begin transaction; set_config('app.current_user_id', uid, true)
+    Backend->>DB: INSERT into kyc_submissions (status='submitted')
+    Backend->>DB: INSERT into kyc_versions (version=1, is_current=TRUE)
+    Backend->>DB: INSERT into kyc_audit_log (event='submission_created')
+    DB-->>Backend: Commit transaction
+    Backend-->>Frontend: Return Submission Confirmation (KYCSubmissionResponse)
+
+    Note over Backend,K8s: 3. Telemetry Scrape & Predictive Autoscaling
+    Backend-->>K8s: Prometheus scrapes /metrics (submission rate increases)
+    K8s->>K8s: Predictor evaluates persistence demand signal
+    K8s->>K8s: Workload Controller patches backend-hpa minReplicas (Proactive Scale-Up)
+
+    Note over Employee,DB: 4. Compliance Review & Delegation
+    Employee->>Frontend: Access Compliance Workbench
+    Frontend->>Backend: GET /kyc/workflow/employee/assigned
+    Backend->>DB: Query assigned submissions (Scoped by app.current_user_id)
+    DB-->>Backend: Return case dossier (Customer PII only; admin excluded)
+    Employee->>Frontend: Record verification findings & risk recommendation
+    Frontend->>Backend: POST /kyc/workflow/submissions/{id}/recommend
+    Backend->>DB: INSERT kyc_reviews (action: recommend_approve/reject/request_correction)
+    Backend->>DB: UPDATE kyc_submissions (status='pending_manager_decision')
+    Backend->>DB: INSERT kyc_audit_log (event='review_completed')
+
+    Note over Manager,DB: 5. Manager Oversight & Final Determination
+    Manager->>Frontend: Open Management Console
+    Frontend->>Backend: GET /kyc/workflow/manager/cases
+    Manager->>Frontend: Select case & issue binding decision ('approve' / 'reject')
+    Frontend->>Backend: POST /kyc/workflow/submissions/{id}/decision
+    Backend->>DB: INSERT kyc_reviews (reviewer_role='bank_manager', action='approve'/'reject')
+    Backend->>DB: UPDATE kyc_submissions (status='approved'/'rejected', closed_at=NOW())
+    Backend->>DB: INSERT kyc_audit_log (event='case_approved'/'case_rejected')
+    Note right of DB: Trigger verifies role='bank_manager' based on session app.current_user_id & checks matching review
+
+    Note over Customer,Frontend: 6. Customer Receipt (Sanitized View)
+    Customer->>Frontend: View 'My KYC' Status
+    Frontend->>Backend: GET /kyc/workflow/submissions/{id}/decision
+    Backend-->>Frontend: Return sanitized receipt (KYCDecisionResponse - internal notes omitted)
+
+    Note over Admin,Backend: 7. Administrative Isolation Guard
+    Admin->>Frontend: Access Admin Console
+    Frontend->>Backend: Attempt GET /kyc/workflow/manager/cases
+    Backend-->>Frontend: HTTP 403 Forbidden ("System administrators are not authorized to access customer KYC workflow content")
+    Admin->>Frontend: View /monitoring/status & Prometheus telemetry (Permitted)

@@ -1,0 +1,87 @@
+flowchart TD
+    subgraph Actors["User Personas & Role Boundaries"]
+        Cust["👤 Customer<br/>(Submits KYC & Revisions)"]
+        Emp["👔 Bank Employee<br/>(Reviews & Recommends)"]
+        Mgr["💼 Bank Manager<br/>(Final Approval / Rejection)"]
+        Admin["🛠️ System Administrator<br/>(Telemetry & User Accounts)"]
+    end
+
+    subgraph ClientTier["Client & Ingress Tier (Local)"]
+        Browser["🌐 React 19 Client UI (Vite + Tailwind CSS 4)"]
+        Nginx["🛡️ Nginx Reverse Proxy (Port 5173 / NodePort 30080)"]
+    end
+
+    subgraph BackendTier["FastAPI Backend Gateway (Port 8000 / NodePort 30800)"]
+        API["🚀 FastAPI Core Application (Uvicorn ASGI)"]
+        AuthModule["🔐 Auth & RBAC Engine (Argon2id + HS256 JWT)"]
+        WorkflowRouter["📋 KYC Workflow Router (/kyc/workflow/*)"]
+        PromExporter["📊 Prometheus Metrics Middleware (/metrics)"]
+        TEESim["🧪 Local TEE Simulation Engine<br/>(SimulationTEEProvider - Software Only)"]
+    end
+
+    subgraph DatabaseTier["PostgreSQL 16 Engine (db-0 / Port 5432 - ClusterIP Only)"]
+        DB[(PostgreSQL 16 DB)]
+        RLS["🔒 Row-Level Security (RLS) Policies"]
+        AuditTriggers["📜 Immutable Audit Log Triggers (kyc_audit_log)"]
+        RoleApp["🔑 Least-Privilege Role: privacy_app"]
+        Tables["🗄️ Core Tables:<br/>• users • transactions<br/>• kyc_submissions • kyc_versions<br/>• kyc_reviews • kyc_audit_log"]
+    end
+
+    subgraph K8sAutoscaling["Kubernetes Autoscaling & Predictive Control Tier"]
+        HPA["⚖️ Horizontal Pod Autoscaler<br/>(backend-hpa: Min 1, Max 4, CPU 60%)"]
+        Predictor["🤖 Workload Predictor Pod (:8080)<br/>• Persistence Baseline (Primary Control)<br/>• XGBoost Regressor (Comparative Telemetry)"]
+        Controller["⚙️ Workload Controller Pod (:8081)<br/>• Least-Privilege RBAC<br/>• Patches spec.minReplicas on HPA"]
+        BackendPods["📦 Backend Replicas (1 to 4 Pods)"]
+    end
+
+    subgraph Observability["Monitoring & Telemetry Pipeline"]
+        Prom["📈 Prometheus Server (:9090 / NodePort 30090)"]
+        Graf["🖥️ Grafana Dashboards (:3000 / NodePort 30030)"]
+        Alerts["🚨 Alert Rules (5 Alerting Policies)"]
+    end
+
+    %% Actor Connections
+    Cust -->|JWT Auth / Case Submission| Browser
+    Emp -->|Case Review & Findings| Browser
+    Mgr -->|Case Delegation & Binding Decision| Browser
+    Admin -->|System Telemetry & User Audit| Browser
+
+    Browser --> Nginx
+    Nginx -->|Reverse Proxy /api/| API
+
+    %% Backend Internal Flow
+    API --> AuthModule
+    API --> WorkflowRouter
+    API --> PromExporter
+    API --> TEESim
+
+    %% Database Connections
+    WorkflowRouter -->|Scoped Session: set_config app.current_user_id| RoleApp
+    RoleApp --> DB
+    DB --- RLS
+    DB --- AuditTriggers
+    DB --- Tables
+
+    %% Autoscaling Feedback Loops
+    BackendPods -.->|Scrapes /metrics every 10s| Prom
+    Prom -.->|Queries traffic rates every 15s| Predictor
+    Predictor -->|Forecasted Demand| Controller
+    Controller -->|RBAC Patch spec.minReplicas| HPA
+    HPA -->|Scales Pods (1-4)| BackendPods
+    Prom --> Graf
+    Prom --- Alerts
+
+    %% Styling
+    classDef actorStyle fill:#2d3748,stroke:#4a5568,stroke-width:2px,color:#fff;
+    classDef clientStyle fill:#1a365d,stroke:#2b6cb0,stroke-width:2px,color:#fff;
+    classDef backendStyle fill:#234e52,stroke:#319795,stroke-width:2px,color:#fff;
+    classDef dbStyle fill:#744210,stroke:#d69e2e,stroke-width:2px,color:#fff;
+    classDef k8sStyle fill:#44337a,stroke:#805ad5,stroke-width:2px,color:#fff;
+    classDef obsStyle fill:#702459,stroke:#b83280,stroke-width:2px,color:#fff;
+
+    class Cust,Emp,Mgr,Admin actorStyle;
+    class Browser,Nginx clientStyle;
+    class API,AuthModule,WorkflowRouter,PromExporter,TEESim backendStyle;
+    class DB,RLS,AuditTriggers,RoleApp,Tables dbStyle;
+    class HPA,Predictor,Controller,BackendPods k8sStyle;
+    class Prom,Graf,Alerts obsStyle;

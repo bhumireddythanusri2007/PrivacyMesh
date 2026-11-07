@@ -1,0 +1,27 @@
+{
+  "dataset": "synthetic_kyc_workload",
+  "split_method": "chronological_80_20_no_leakage",
+  "test_sample_count": 1728,
+  "baselines": {
+    "persistence_last_known_value": {
+      "MAE": 2.342,
+      "RMSE": 3.5268,
+      "R2": 0.9524
+    },
+    "rolling_mean_15m": {
+      "MAE": 2.2794,
+      "RMSE": 3.6804,
+      "R2": 0.9482
+    }
+  },
+  "xgboost_model": {
+    "MAE": 2.5774,
+    "RMSE": 3.7818,
+    "R2": 0.9453
+  },
+  "comparison_delta_vs_persistence": {
+    "mae_reduction": -0.2354,
+    "rmse_reduction": -0.255,
+    "r2_improvement": -0.0071
+  }
+}

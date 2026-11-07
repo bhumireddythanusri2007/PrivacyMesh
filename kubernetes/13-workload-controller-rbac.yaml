@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: privacymesh-scaling-controller
+  namespace: privacymesh
+  labels:
+    app.kubernetes.io/name: privacymesh
+    app.kubernetes.io/component: workload-controller
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: privacymesh-hpa-patcher
+  namespace: privacymesh
+  labels:
+    app.kubernetes.io/name: privacymesh
+    app.kubernetes.io/component: workload-controller
+rules:
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    resourceNames: ["backend-hpa"]
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: privacymesh-scaling-controller-binding
+  namespace: privacymesh
+  labels:
+    app.kubernetes.io/name: privacymesh
+    app.kubernetes.io/component: workload-controller
+subjects:
+  - kind: ServiceAccount
+    name: privacymesh-scaling-controller
+    namespace: privacymesh
+roleRef:
+  kind: Role
+  name: privacymesh-hpa-patcher
+  apiGroup: rbac.authorization.k8s.io

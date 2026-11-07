@@ -1,0 +1,52 @@
+groups:
+  - name: privacymesh_alerts
+    rules:
+      - alert: BackendUnavailable
+        expr: up{job="privacymesh-backend"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "PrivacyMesh backend service is unreachable"
+          description: "FastAPI backend target at backend:8000 has been down for more than 30 seconds."
+
+      - alert: DatabaseUnavailable
+        expr: privacymesh_db_connected == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL database is disconnected or unreachable"
+          description: "The backend reports that the database connection check is failing."
+
+      - alert: HighCPUUsage
+        expr: privacymesh_process_cpu_percent > 85
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High backend CPU utilization detected"
+          description: "PrivacyMesh backend CPU consumption has exceeded 85% for more than 1 minute."
+
+      - alert: HighMemoryUsage
+        expr: privacymesh_process_memory_percent > 85
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High backend memory consumption detected"
+          description: "PrivacyMesh backend host memory consumption has exceeded 85% for more than 1 minute."
+
+      - alert: HighHttp5xxErrorRate
+        expr: |
+          (
+            sum(rate(privacymesh_http_requests_total{status=~"5.."}[2m]))
+            /
+            clamp_min(sum(rate(privacymesh_http_requests_total[2m])), 0.001)
+          ) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High HTTP 5xx error rate detected"
+          description: "HTTP 5xx server error rate exceeds 5% of all incoming requests over a 2-minute window."

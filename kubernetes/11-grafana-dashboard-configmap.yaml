@@ -1,0 +1,537 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-privacymesh
+  namespace: privacymesh
+  labels:
+    app.kubernetes.io/name: privacymesh
+    app.kubernetes.io/component: monitoring
+data:
+  privacymesh_dashboard.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "id": 100,
+          "title": "Service Health & High-Level KPIs",
+          "type": "row"
+        },
+        {
+          "id": 1,
+          "title": "Backend Target Status",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "up{job=\"privacymesh-backend\"}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                { "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } }, "type": "value" }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 1 }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": { "values": false, "calcs": ["lastNotNull"] },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "background"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Database Connectivity",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "privacymesh_db_connected",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                { "options": { "0": { "text": "DISCONNECTED", "color": "red" }, "1": { "text": "CONNECTED", "color": "green" } }, "type": "value" }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 1 }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": { "values": false, "calcs": ["lastNotNull"] },
+            "colorMode": "background"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Total HTTP Requests",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "sum(privacymesh_http_requests_total) or vector(0)",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [{ "color": "blue", "value": null }]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": { "values": false, "calcs": ["lastNotNull"] }
+          }
+        },
+        {
+          "id": 4,
+          "title": "Total HTTP Errors (4xx/5xx)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "sum(privacymesh_http_errors_total) or vector(0)",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "orange", "value": 1 },
+                  { "color": "red", "value": 10 }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": { "values": false, "calcs": ["lastNotNull"] }
+          }
+        },
+        {
+          "id": 5,
+          "title": "Backend CPU Load",
+          "type": "gauge",
+          "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "privacymesh_process_cpu_percent or vector(0)",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 60 },
+                  { "color": "red", "value": 85 }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": 6,
+          "title": "Backend Host Memory",
+          "type": "gauge",
+          "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "privacymesh_process_memory_percent or vector(0)",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 75 },
+                  { "color": "red", "value": 90 }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+          "id": 101,
+          "title": "API Traffic & Request Dynamics",
+          "type": "row"
+        },
+        {
+          "id": 7,
+          "title": "Request Rate by Endpoint (req/s)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "sum by (endpoint, method) (rate(privacymesh_http_requests_total[1m]))",
+              "legendFormat": "{{method}} {{endpoint}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15
+              },
+              "unit": "reqps"
+            }
+          }
+        },
+        {
+          "id": 8,
+          "title": "HTTP Status Code Distribution",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "sum by (status) (rate(privacymesh_http_requests_total[1m]))",
+              "legendFormat": "HTTP {{status}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "bars",
+                "stacking": { "mode": "normal", "group": "A" },
+                "lineWidth": 1,
+                "fillOpacity": 80
+              },
+              "unit": "reqps"
+            }
+          }
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+          "id": 102,
+          "title": "Latency & Error Analysis",
+          "type": "row"
+        },
+        {
+          "id": 9,
+          "title": "Response Latency Percentiles (p50, p95, p99)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "histogram_quantile(0.50, sum(rate(privacymesh_http_request_duration_seconds_bucket[1m])) by (le))",
+              "legendFormat": "p50 (Median)",
+              "refId": "A"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "histogram_quantile(0.95, sum(rate(privacymesh_http_request_duration_seconds_bucket[1m])) by (le))",
+              "legendFormat": "p95",
+              "refId": "B"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "histogram_quantile(0.99, sum(rate(privacymesh_http_request_duration_seconds_bucket[1m])) by (le))",
+              "legendFormat": "p99",
+              "refId": "C"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "linear",
+                "lineWidth": 2
+              },
+              "unit": "s"
+            }
+          }
+        },
+        {
+          "id": 10,
+          "title": "Error Rate by Category (4xx / 5xx)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "sum by (error_type) (rate(privacymesh_http_errors_total[1m]))",
+              "legendFormat": "{{error_type}} Errors",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 25
+              },
+              "unit": "reqps"
+            }
+          }
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+          "id": 103,
+          "title": "System & Process Telemetry",
+          "type": "row"
+        },
+        {
+          "id": 11,
+          "title": "Process Resident Memory (RSS)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "privacymesh_process_memory_bytes",
+              "legendFormat": "FastAPI RSS Memory",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15
+              },
+              "unit": "bytes"
+            }
+          }
+        },
+        {
+          "id": 12,
+          "title": "CPU & Memory Utilization History",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "privacymesh_process_cpu_percent",
+              "legendFormat": "CPU %",
+              "refId": "A"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "privacymesh_process_memory_percent",
+              "legendFormat": "Memory %",
+              "refId": "B"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2
+              },
+              "unit": "percent",
+              "min": 0,
+              "max": 100
+            }
+          }
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 31 },
+          "id": 200,
+          "title": "Predictive Autoscaling & Workload Forecasting (Phase 10)",
+          "type": "row"
+        },
+        {
+          "id": 201,
+          "title": "Predicted KYC Demand vs Baseline (Next 5m)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "privacymesh_workload_predicted_demand_5m",
+              "legendFormat": "XGBoost Predicted Demand (Next 5m)",
+              "refId": "A"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "privacymesh_workload_baseline_persistence_demand",
+              "legendFormat": "Persistence Baseline Demand",
+              "refId": "B"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "lineWidth": 2 },
+              "unit": "short",
+              "min": 0
+            }
+          }
+        },
+        {
+          "id": 202,
+          "title": "Autoscaling Coordination (Replicas)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 8, "x": 12, "y": 32 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "privacymesh_controller_recommended_min_replicas",
+              "legendFormat": "Recommended minReplicas",
+              "refId": "A"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "privacymesh_controller_applied_min_replicas",
+              "legendFormat": "Applied HPA minReplicas",
+              "refId": "B"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "privacymesh_controller_hpa_current_replicas",
+              "legendFormat": "Actual Backend Pods",
+              "refId": "C"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": { "drawStyle": "line", "lineInterpolation": "stepAfter", "lineWidth": 2 },
+              "unit": "short",
+              "min": 1,
+              "max": 4
+            }
+          }
+        },
+        {
+          "id": 203,
+          "title": "Predictive Controller Health",
+          "type": "stat",
+          "gridPos": { "h": 8, "w": 4, "x": 20, "y": 32 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "privacymesh_workload_predictor_health",
+              "legendFormat": "Predictor Health",
+              "refId": "A"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "expr": "privacymesh_controller_health_status",
+              "legendFormat": "Controller Health",
+              "refId": "B"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                { "options": { "0": { "text": "DEGRADED", "color": "orange" }, "1": { "text": "HEALTHY", "color": "green" } }, "type": "value" }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "orange", "value": null },
+                  { "color": "green", "value": 1 }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["privacymesh", "fastapi", "observability"],
+      "time": {
+        "from": "now-15m",
+        "to": "now"
+      },
+      "timepicker": {
+        "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"]
+      },
+      "timezone": "browser",
+      "title": "PrivacyMesh Application Observability",
+      "uid": "privacymesh-overview",
+      "version": 1
+    }

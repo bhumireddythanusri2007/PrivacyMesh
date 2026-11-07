@@ -1,5 +1,5 @@
-import type { FC, ReactNode } from 'react'
-import type { ActivePage, UserRole } from '../types'
+﻿import type { FC, ReactNode } from 'react'
+import type { UserRole } from '../types'
 import {
   DashboardIcon,
   TransactionsIcon,
@@ -8,15 +8,127 @@ import {
   AdminIcon,
   LogoutIcon,
   CpuChipIcon,
+  ActivityIcon,
 } from './Icons'
 
+export type NavigationPage =
+  | 'Dashboard'
+  | 'My KYC'
+  | 'Assigned Cases'
+  | 'Case Management'
+  | 'User Management'
+  | 'Security'
+  | 'Monitoring'
+  | 'Transactions'
+  | 'KYC Records'
+  | 'Admin'
+
 interface SidebarProps {
-  activePage: ActivePage
-  setActivePage: (page: ActivePage) => void
+  activePage: NavigationPage
+  setActivePage: (page: NavigationPage) => void
   user: { id: number; username: string; role: UserRole } | null
   onLogout: () => void
   isOpenMobile: boolean
   setIsOpenMobile: (open: boolean) => void
+}
+
+interface NavItem {
+  name: NavigationPage
+  icon: ReactNode
+  badge?: string
+}
+
+const getNavItemsForRole = (role?: UserRole): NavItem[] => {
+  switch (role) {
+    case 'customer':
+      return [
+        { name: 'Dashboard', icon: <DashboardIcon /> },
+        { name: 'My KYC', icon: <KYCIcon /> },
+        { name: 'Security', icon: <SecurityIcon /> },
+        { name: 'Monitoring', icon: <ActivityIcon /> },
+      ]
+    case 'bank_employee':
+      return [
+        { name: 'Dashboard', icon: <DashboardIcon /> },
+        { name: 'Assigned Cases', icon: <KYCIcon /> },
+        { name: 'Security', icon: <SecurityIcon /> },
+        { name: 'Monitoring', icon: <ActivityIcon /> },
+      ]
+    case 'bank_manager':
+      return [
+        { name: 'Dashboard', icon: <DashboardIcon /> },
+        { name: 'Case Management', icon: <KYCIcon /> },
+        { name: 'Security', icon: <SecurityIcon /> },
+        { name: 'Monitoring', icon: <ActivityIcon /> },
+      ]
+    case 'system_admin':
+      return [
+        { name: 'Dashboard', icon: <DashboardIcon /> },
+        { name: 'User Management', icon: <AdminIcon />, badge: 'Admin' },
+        { name: 'Security', icon: <SecurityIcon /> },
+        { name: 'Monitoring', icon: <ActivityIcon /> },
+      ]
+    case 'admin':
+      // Legacy admin compatibility
+      return [
+        { name: 'Dashboard', icon: <DashboardIcon /> },
+        { name: 'User Management', icon: <AdminIcon />, badge: 'Admin' },
+        { name: 'Security', icon: <SecurityIcon /> },
+        { name: 'Monitoring', icon: <ActivityIcon /> },
+      ]
+    case 'user':
+      // Legacy user compatibility
+      return [
+        { name: 'Dashboard', icon: <DashboardIcon /> },
+        { name: 'Transactions', icon: <TransactionsIcon /> },
+        { name: 'Security', icon: <SecurityIcon /> },
+        { name: 'Monitoring', icon: <ActivityIcon /> },
+      ]
+    default:
+      // Guest or unsupported role: safe baseline navigation only
+      return [
+        { name: 'Dashboard', icon: <DashboardIcon /> },
+        { name: 'Security', icon: <SecurityIcon /> },
+        { name: 'Monitoring', icon: <ActivityIcon /> },
+      ]
+  }
+}
+
+const formatRoleLabel = (role: UserRole): string => {
+  switch (role) {
+    case 'customer':
+      return 'Customer'
+    case 'bank_employee':
+      return 'Bank Employee'
+    case 'bank_manager':
+      return 'Bank Manager'
+    case 'system_admin':
+      return 'System Admin'
+    case 'admin':
+      return 'Admin'
+    case 'user':
+      return 'User'
+    case 'pending_review':
+      return 'Pending Review'
+    default:
+      return String(role).replace(/_/g, ' ')
+  }
+}
+
+const getRoleBadgeClass = (role: UserRole): string => {
+  switch (role) {
+    case 'system_admin':
+    case 'admin':
+      return 'text-purple-600'
+    case 'bank_manager':
+      return 'text-indigo-600'
+    case 'bank_employee':
+      return 'text-blue-600'
+    case 'customer':
+      return 'text-emerald-600'
+    default:
+      return 'text-slate-500'
+  }
 }
 
 export const Sidebar: FC<SidebarProps> = ({
@@ -27,19 +139,9 @@ export const Sidebar: FC<SidebarProps> = ({
   isOpenMobile,
   setIsOpenMobile,
 }) => {
-  const navItems: { name: ActivePage; icon: ReactNode; adminOnly?: boolean }[] = [
-    { name: 'Dashboard', icon: <DashboardIcon /> },
-    { name: 'Transactions', icon: <TransactionsIcon /> },
-    { name: 'KYC Records', icon: <KYCIcon /> },
-    { name: 'Security', icon: <SecurityIcon /> },
-    { name: 'Admin', icon: <AdminIcon />, adminOnly: true },
-  ]
+  const visibleNavItems = getNavItemsForRole(user?.role)
 
-  const visibleNavItems = navItems.filter(
-    (item) => !item.adminOnly || user?.role === 'admin'
-  )
-
-  const handleNavClick = (page: ActivePage) => {
+  const handleNavClick = (page: NavigationPage) => {
     setActivePage(page)
     setIsOpenMobile(false)
   }
@@ -83,9 +185,9 @@ export const Sidebar: FC<SidebarProps> = ({
                 {item.name === 'Security' && (
                   <span className="h-2 w-2 rounded-full bg-emerald-500" title="Security controls active" />
                 )}
-                {item.adminOnly && (
+                {item.badge && (
                   <span className="rounded-sm bg-purple-100 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700 uppercase">
-                    Admin
+                    {item.badge}
                   </span>
                 )}
               </button>
@@ -118,10 +220,8 @@ export const Sidebar: FC<SidebarProps> = ({
               </div>
               <div className="min-w-0">
                 <p className="truncate text-xs font-semibold text-slate-800">{user.username}</p>
-                <span className={`inline-block text-[10px] uppercase font-bold tracking-wider ${
-                  user.role === 'admin' ? 'text-purple-600' : 'text-slate-500'
-                }`}>
-                  {user.role}
+                <span className={`inline-block text-[10px] uppercase font-bold tracking-wider ${getRoleBadgeClass(user.role)}`}>
+                  {formatRoleLabel(user.role)}
                 </span>
               </div>
             </div>
@@ -146,14 +246,14 @@ export const Sidebar: FC<SidebarProps> = ({
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 border-r border-slate-200 bg-white md:block">
+      <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 border-r border-slate-200 bg-white lg:block">
         {sidebarContent}
       </aside>
 
       {/* Mobile Drawer Overlay */}
       {isOpenMobile && (
         <div
-          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-xs md:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-xs lg:hidden"
           onClick={() => setIsOpenMobile(false)}
         >
           <div

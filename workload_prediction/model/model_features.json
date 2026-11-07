@@ -1,0 +1,35 @@
+{
+  "model_type": "xgboost.XGBRegressor",
+  "objective": "reg:squarederror",
+  "version": "1.0.0",
+  "feature_count": 11,
+  "features": [
+    "http_request_rate_5m",
+    "kyc_submission_rate_5m",
+    "kyc_submission_rate_15m",
+    "hour_sin",
+    "hour_cos",
+    "day_of_week_sin",
+    "day_of_week_cos",
+    "is_business_hours",
+    "lag_1_demand",
+    "lag_2_demand",
+    "current_backend_replicas"
+  ],
+  "target": "target_kyc_submissions_next_5m",
+  "feature_importance": {
+    "http_request_rate_5m": 0.3543,
+    "kyc_submission_rate_5m": 0.4739,
+    "kyc_submission_rate_15m": 0.0578,
+    "hour_sin": 0.0055,
+    "hour_cos": 0.0061,
+    "day_of_week_sin": 0.0083,
+    "day_of_week_cos": 0.0007,
+    "is_business_hours": 0.0887,
+    "lag_1_demand": 0.0028,
+    "lag_2_demand": 0.0013,
+    "current_backend_replicas": 0.0006
+  },
+  "trained_on_samples": 6911,
+  "evaluated_on_samples": 1728
+}

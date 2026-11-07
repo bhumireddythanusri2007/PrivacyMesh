@@ -1,0 +1,32 @@
+{
+  "status": "SUCCESS",
+  "load_stats": {
+    "scheduled": 401,
+    "completed": 401,
+    "http_200": 401,
+    "errors": 0
+  },
+  "predictor_burst": {
+    "persistence_demand": 416.93,
+    "xgboost_demand": 39.04,
+    "demand_label": "synthetic_benchmark_demand_5m",
+    "workload_type": "synthetic_benchmark",
+    "endpoint_regex": ".*confidential-computing/run-demo.*"
+  },
+  "controller_burst": {
+    "recommended_min_replicas": 1.0,
+    "applied_min_replicas": 1.0
+  },
+  "hpa_burst": {
+    "min_replicas": 1,
+    "max_replicas": 4,
+    "desired_replicas": 1,
+    "current_replicas": 1
+  },
+  "hpa_cooldown": {
+    "min_replicas": 1,
+    "max_replicas": 4,
+    "desired_replicas": 1,
+    "current_replicas": 1
+  }
+}

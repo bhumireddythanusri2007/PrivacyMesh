@@ -111,16 +111,16 @@ export const SecurityView: FC<SecurityViewProps> = ({ user, onOpenAuth }) => {
     },
     {
       title: 'Role-Based Authorization (RBAC)',
-      component: 'backend/app/routers/admin.py',
+      component: 'backend/app/security.py, routers/kyc_workflow.py',
       detail:
-        'Guarded by require_admin. Registration strictly forces role="user", preventing privilege escalation.',
+        'Four actual roles enforced: customer, bank_employee, bank_manager, system_admin. Protected by require_role() dependency factory. Public registration assigns the customer role via database default — no privilege escalation is possible. Staff roles are provisioned directly by system administrators.',
       status: 'Verified Active',
     },
     {
       title: 'Multi-Tenant Workload Isolation',
       component: 'backend/app/routers/transactions.py, kyc.py',
       detail:
-        'Users can query and record only their own transactions and KYC dossiers via foreign-key scoped queries.',
+        'Users access permitted transaction and KYC data through role-based authorization and account-scoped queries. PostgreSQL Row-Level Security adds protection on the protected workflow and transaction tables.',
       status: 'Verified Active',
     },
     {
@@ -137,7 +137,7 @@ export const SecurityView: FC<SecurityViewProps> = ({ user, onOpenAuth }) => {
       title: 'Hardware-Isolated Enclaves',
       technology: 'Intel SGX PRM / AMD SEV-SNP',
       detail:
-        'Hardware encrypted memory regions (EPC/ASID) isolating banking workloads from host OS and hypervisor snooping.',
+        'Intel SGX uses Enclave Page Cache (EPC) for enclave memory. AMD SEV-SNP protects virtual-machine memory. These are distinct hardware approaches and are not enabled in this software-only prototype.',
     },
     {
       title: 'Remote Attestation & Measurement',
@@ -214,13 +214,13 @@ export const SecurityView: FC<SecurityViewProps> = ({ user, onOpenAuth }) => {
         {teeStatus && (
           <div className="mt-5 pt-4 border-t border-amber-200/70 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs">
             <div className="rounded-xl bg-white/70 p-2.5 border border-amber-100">
-              <span className="text-slate-500 text-[11px] block">CPU SGX Instruction:</span>
+              <span className="text-slate-500 text-[11px] block">Intel SGX CPU Flag:</span>
               <span className="font-semibold text-slate-800">
                 {teeStatus.hardware_detection.cpu_sgx_detected ? 'Detected in CPU' : 'Not detected'}
               </span>
             </div>
             <div className="rounded-xl bg-white/70 p-2.5 border border-amber-100">
-              <span className="text-slate-500 text-[11px] block">CPU SEV Instruction:</span>
+              <span className="text-slate-500 text-[11px] block">AMD SEV CPU Flag:</span>
               <span className="font-semibold text-slate-800">
                 {teeStatus.hardware_detection.cpu_sev_detected ? 'Detected in CPU' : 'Not detected'}
               </span>
@@ -321,7 +321,7 @@ export const SecurityView: FC<SecurityViewProps> = ({ user, onOpenAuth }) => {
                 </span>
               </div>
               <p className="mt-2 text-xs leading-5 text-blue-900">
-                Hardware-enforced CPU memory encryption (TEEs) ensuring that hypervisors, root OS admins, or DMA attacks cannot snoop on process memory.
+                Hardware-backed TEEs can protect data in use by isolating selected memory or workloads from certain privileged software and physical-access threats. Protection depends on the TEE architecture, platform configuration, and applicable security mitigations.
               </p>
               <div className="mt-4 rounded-xl bg-white p-3 border border-blue-200 text-xs text-blue-900 space-y-1">
                 <span className="font-semibold block text-[11px] text-blue-600 uppercase">
