@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -10,7 +10,10 @@ from pydantic import BaseModel, ConfigDict, Field
 class UserCreate(BaseModel):
     username: str = Field(min_length=3, max_length=100)
     password: str = Field(min_length=8, max_length=128)
-    role: Literal["user"] = "user"
+    # Public registration only creates customer accounts. The 'role' field here
+    # is accepted for schema compatibility but ignored by the registration endpoint,
+    # which always relies on the database server_default ('customer').
+    role: Literal["customer", "user"] = "customer"
 
 
 class UserLogin(BaseModel):
@@ -47,7 +50,7 @@ class TransactionResponse(BaseModel):
     created_at: datetime
 
 
-# ---------- KYC schemas ----------
+# ---------- Legacy KYC schemas ----------
 
 class KYCRecordCreate(BaseModel):
     customer_ref: str = Field(min_length=1, max_length=100)
@@ -63,4 +66,85 @@ class KYCRecordResponse(BaseModel):
     document_type: str
     verification_status: str
     risk_category: str
+    created_at: datetime
+
+
+# ---------- Modern KYC Workflow schemas ----------
+
+class KYCVersionCreate(BaseModel):
+    document_type: str = Field(min_length=1, max_length=50)
+
+
+class KYCVersionResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    submission_id: int
+    version_number: int
+    is_current: bool
+    document_type: str
+    auto_validation_status: str
+    auto_validation_results: Any | None = None
+    created_at: datetime
+
+
+class KYCSubmissionCreate(BaseModel):
+    submission_ref: str = Field(min_length=1, max_length=100)
+    document_type: str = Field(min_length=1, max_length=50)
+
+
+class KYCSubmissionResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    customer_id: int | None = None
+    submission_ref: str
+    status: str
+    is_archived: bool
+    archived_at: datetime | None = None
+    archived_by_id: int | None = None
+    assigned_employee_id: int | None = None
+    assigned_manager_id: int | None = None
+    created_at: datetime
+    updated_at: datetime
+    current_version: KYCVersionResponse | None = None
+
+
+class KYCDecisionResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    submission_id: int
+    version_id: int
+    action: str
+    customer_notes: str | None = None
+    created_at: datetime
+
+
+class KYCEmployeeRecommendationRequest(BaseModel):
+    action: Literal["recommend_approve", "recommend_reject", "request_correction"]
+    internal_notes: str = Field(min_length=1, max_length=4000)
+
+
+class KYCManagerDecisionRequest(BaseModel):
+    action: Literal["approve", "reject", "manager_request_correction"]
+    internal_notes: str | None = Field(default=None, max_length=4000)
+    customer_notes: str = Field(min_length=1, max_length=2000)
+
+
+class KYCAssignEmployeeRequest(BaseModel):
+    assigned_employee_id: int
+
+
+class KYCReviewResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    submission_id: int
+    version_id: int
+    reviewer_id: int
+    reviewer_role: str
+    action: str
+    internal_notes: str | None = None
+    customer_notes: str | None = None
     created_at: datetime

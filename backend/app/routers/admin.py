@@ -4,18 +4,9 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User, Transaction, KYCRecord
 from app.schemas import UserResponse
-from app.security import get_current_user
+from app.security import require_admin
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
-
-
-def require_admin(current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required",
-        )
-    return current_user
 
 
 @router.get("/summary")

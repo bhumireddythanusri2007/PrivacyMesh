@@ -3,7 +3,18 @@ import type {
   AuthResponse,
   CreateTransactionPayload,
   HealthStatus,
+  KYCAssignEmployeeRequest,
+  KYCDecisionResponse,
+  KYCEmployeeRecommendationRequest,
+  KYCManagerDecisionRequest,
   KYCRecord,
+  KYCReviewResponse,
+  KYCSubmissionCreate,
+  KYCSubmissionResponse,
+  KYCVersionCreate,
+  KYCVersionResponse,
+  MonitoringStatusResponse,
+  ParsedPrometheusMetrics,
   ProtectedUserResponse,
   SyntheticWorkloadInput,
   SyntheticWorkloadResult,
@@ -231,6 +242,249 @@ export async function runConfidentialDemo(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
+    },
+    true
+  )
+}
+
+// ----------------- Monitoring API -----------------
+
+export async function fetchMonitoringStatus(): Promise<MonitoringStatusResponse> {
+  return request<MonitoringStatusResponse>('/monitoring/status')
+}
+
+export async function fetchMetricsText(): Promise<string> {
+  const url = `${API_BASE_URL}/metrics`
+  const response = await fetch(url, {
+    headers: {
+      Accept: 'text/plain, */*',
+    },
+  })
+  if (!response.ok) {
+    throw new ApiError(response.status, `Failed to retrieve metrics (HTTP ${response.status})`)
+  }
+  return response.text()
+}
+
+/**
+ * Safely parses Prometheus text-format metrics.
+ * Extracts privacymesh_http_requests_total and duration histogram sums/counts.
+ * If metrics are missing or unavailable, returns null for those values.
+ */
+export function parsePrometheusMetrics(text: string): ParsedPrometheusMetrics {
+  let totalRequests = 0
+  let successRequests = 0
+  let errorRequests = 0
+  let totalDurationSum = 0
+  let totalDurationCount = 0
+  let hasRequestsMetric = false
+  const endpointMap = new Map<string, { method: string; endpoint: string; status: string; count: number }>()
+
+  const lines = text.split('\n')
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+
+    // Parse privacymesh_http_requests_total counter
+    const reqMatch = trimmed.match(/^privacymesh_http_requests_total\{([^}]+)\}\s+([0-9.eE+-]+)/)
+    if (reqMatch) {
+      hasRequestsMetric = true
+      const labelsStr = reqMatch[1]
+      const count = parseFloat(reqMatch[2]) || 0
+      totalRequests += count
+
+      const methodMatch = labelsStr.match(/method="([^"]+)"/)
+      const endpointMatch = labelsStr.match(/endpoint="([^"]+)"/)
+      const statusMatch = labelsStr.match(/status="([^"]+)"/)
+
+      const method = methodMatch ? methodMatch[1] : 'UNKNOWN'
+      const endpoint = endpointMatch ? endpointMatch[1] : 'UNKNOWN'
+      const status = statusMatch ? statusMatch[1] : 'UNKNOWN'
+
+      if (status.startsWith('2')) {
+        successRequests += count
+      } else if (status.startsWith('4') || status.startsWith('5')) {
+        errorRequests += count
+      }
+
+      const key = `${method}:${endpoint}:${status}`
+      const existing = endpointMap.get(key)
+      if (existing) {
+        existing.count += count
+      } else {
+        endpointMap.set(key, { method, endpoint, status, count })
+      }
+    }
+
+    // Parse duration sum
+    const sumMatch = trimmed.match(/^privacymesh_http_request_duration_seconds_sum\{([^}]+)\}\s+([0-9.eE+-]+)/)
+    if (sumMatch) {
+      totalDurationSum += parseFloat(sumMatch[2]) || 0
+    }
+
+    // Parse duration count
+    const countMatch = trimmed.match(/^privacymesh_http_request_duration_seconds_count\{([^}]+)\}\s+([0-9.eE+-]+)/)
+    if (countMatch) {
+      totalDurationCount += parseFloat(countMatch[2]) || 0
+    }
+  }
+
+  const avgLatencyMs =
+    totalDurationCount > 0
+      ? Math.round((totalDurationSum / totalDurationCount) * 1000 * 100) / 100
+      : null
+
+  const endpointBreakdown = Array.from(endpointMap.values()).sort((a, b) => b.count - a.count)
+
+  return {
+    totalRequests: hasRequestsMetric ? totalRequests : null,
+    successRequests: hasRequestsMetric ? successRequests : null,
+    errorRequests: hasRequestsMetric ? errorRequests : null,
+    avgLatencyMs,
+    endpointBreakdown,
+    rawMetricsAvailable: text.length > 0,
+  }
+}
+
+// ----------------- Modern Multi-Role KYC Workflow API -----------------
+
+// Customer endpoints
+export async function createKYCSubmission(payload: KYCSubmissionCreate): Promise<KYCSubmissionResponse> {
+  return request<KYCSubmissionResponse>(
+    '/kyc/workflow/submissions',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    },
+    true
+  )
+}
+
+export async function fetchMyKYCSubmissions(): Promise<KYCSubmissionResponse[]> {
+  return request<KYCSubmissionResponse[]>('/kyc/workflow/submissions/my', {}, true)
+}
+
+export async function fetchKYCSubmissionDetail(submissionId: number): Promise<KYCSubmissionResponse> {
+  return request<KYCSubmissionResponse>(
+    `/kyc/workflow/submissions/${encodeURIComponent(submissionId)}`,
+    {},
+    true
+  )
+}
+
+export async function createKYCVersion(
+  submissionId: number,
+  payload: KYCVersionCreate
+): Promise<KYCVersionResponse> {
+  return request<KYCVersionResponse>(
+    `/kyc/workflow/submissions/${encodeURIComponent(submissionId)}/versions`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    },
+    true
+  )
+}
+
+export async function resubmitKYCCorrection(submissionId: number): Promise<KYCSubmissionResponse> {
+  return request<KYCSubmissionResponse>(
+    `/kyc/workflow/submissions/${encodeURIComponent(submissionId)}/resubmit`,
+    {
+      method: 'POST',
+    },
+    true
+  )
+}
+
+export async function fetchCustomerKYCDecision(submissionId: number): Promise<KYCDecisionResponse> {
+  return request<KYCDecisionResponse>(
+    `/kyc/workflow/submissions/${encodeURIComponent(submissionId)}/decision`,
+    {},
+    true
+  )
+}
+
+// Bank Employee endpoints
+export async function fetchAssignedKYCCases(): Promise<KYCSubmissionResponse[]> {
+  return request<KYCSubmissionResponse[]>('/kyc/workflow/employee/assigned', {}, true)
+}
+
+export async function startEmployeeKYCReview(submissionId: number): Promise<KYCSubmissionResponse> {
+  return request<KYCSubmissionResponse>(
+    `/kyc/workflow/submissions/${encodeURIComponent(submissionId)}/review-start`,
+    {
+      method: 'POST',
+    },
+    true
+  )
+}
+
+export async function submitEmployeeKYCRecommendation(
+  submissionId: number,
+  payload: KYCEmployeeRecommendationRequest
+): Promise<KYCSubmissionResponse> {
+  return request<KYCSubmissionResponse>(
+    `/kyc/workflow/submissions/${encodeURIComponent(submissionId)}/recommend`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    },
+    true
+  )
+}
+
+export async function fetchKYCSubmissionReviews(submissionId: number): Promise<KYCReviewResponse[]> {
+  return request<KYCReviewResponse[]>(
+    `/kyc/workflow/submissions/${encodeURIComponent(submissionId)}/reviews`,
+    {},
+    true
+  )
+}
+
+// Bank Manager endpoints
+export async function fetchManagerKYCCases(statusFilter?: string): Promise<KYCSubmissionResponse[]> {
+  const query = statusFilter ? `?status=${encodeURIComponent(statusFilter.trim())}` : ''
+  return request<KYCSubmissionResponse[]>(`/kyc/workflow/manager/cases${query}`, {}, true)
+}
+
+export async function assignEmployeeToKYCCase(
+  submissionId: number,
+  payload: KYCAssignEmployeeRequest
+): Promise<KYCSubmissionResponse> {
+  return request<KYCSubmissionResponse>(
+    `/kyc/workflow/submissions/${encodeURIComponent(submissionId)}/assign`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    },
+    true
+  )
+}
+
+export async function finalizeManagerKYCDecision(
+  submissionId: number,
+  payload: KYCManagerDecisionRequest
+): Promise<KYCSubmissionResponse> {
+  return request<KYCSubmissionResponse>(
+    `/kyc/workflow/submissions/${encodeURIComponent(submissionId)}/decision`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    },
+    true
+  )
+}
+
+export async function archiveKYCSubmission(submissionId: number): Promise<KYCSubmissionResponse> {
+  return request<KYCSubmissionResponse>(
+    `/kyc/workflow/submissions/${encodeURIComponent(submissionId)}/archive`,
+    {
+      method: 'POST',
     },
     true
   )

@@ -30,11 +30,11 @@ def register_user(
             detail="Username already exists",
         )
 
-    # Public registration must not grant administrator access.
+    # Public registration must not grant administrator access; database defaults role to 'customer'
+    # and privacy_app role is strictly restricted from inserting the 'role' column.
     new_user = User(
         username=user_data.username,
         password_hash=hash_password(user_data.password),
-        role="user",
     )
 
     db.add(new_user)
@@ -63,6 +63,12 @@ def login_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password",
             headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if user.role == "pending_review":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is pending administrative review",
         )
 
     token = create_access_token(

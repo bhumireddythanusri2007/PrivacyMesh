@@ -1,0 +1,36 @@
+{
+  "Approach A": {
+    "approach": "Approach A",
+    "run_status": "VALID_EXPERIMENT",
+    "is_valid_for_comparison": true,
+    "sample_ticks": 60,
+    "missing_telemetry_ticks": 0,
+    "scheduled_requests": 1970,
+    "completed_requests": 1970,
+    "generator_avg_lag_pct": 2.84,
+    "total_success": 1970,
+    "total_errors": 0,
+    "timeouts": 0,
+    "connection_errors": 0,
+    "error_rate_pct": 0.0,
+    "overall_avg_latency_ms": 9.74,
+    "burst_avg_latency_ms": 9.13,
+    "max_p95_latency_ms": 21.64,
+    "min_replicas_observed": 1,
+    "max_replicas_reached": 1,
+    "scale_up_response_time_sec": null,
+    "scale_down_duration_sec": null,
+    "max_cpu_millicores": 43,
+    "avg_cpu_millicores": 22.4,
+    "max_memory_mib": 81.0,
+    "avg_memory_mib": 80.6
+  },
+  "Approach B": {
+    "approach": "Approach B",
+    "status": "NO_DATA"
+  },
+  "Approach C": {
+    "approach": "Approach C",
+    "status": "NO_DATA"
+  }
+}

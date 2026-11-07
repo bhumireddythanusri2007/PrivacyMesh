@@ -1,0 +1,65 @@
+{
+  "Approach A": {
+    "approach": "Approach A",
+    "run_status": "VALID_EXPERIMENT",
+    "is_valid_for_comparison": true,
+    "sample_ticks": 60,
+    "missing_telemetry_ticks": 0,
+    "scheduled_requests": 2520,
+    "completed_requests": 2520,
+    "generator_avg_lag_pct": 0.24,
+    "total_success": 2520,
+    "total_errors": 0,
+    "timeouts": 0,
+    "connection_errors": 0,
+    "error_rate_pct": 0.0,
+    "overall_avg_latency_ms": 9.64,
+    "burst_avg_latency_ms": 9.85,
+    "max_p95_latency_ms": 25.78,
+    "min_replicas_observed": 1,
+    "max_replicas_reached": 1,
+    "scale_up_response_time_sec": null,
+    "scale_down_duration_sec": null,
+    "max_cpu_millicores": 64,
+    "avg_cpu_millicores": 29.2,
+    "max_memory_mib": 82.0,
+    "avg_memory_mib": 81.4,
+    "max_generator_lag_pct": 5.14,
+    "warmup_avg_latency_ms": 10.35,
+    "cooldown_avg_latency_ms": 9.07,
+    "stage_breakdown": {
+      "warmup": {
+        "duration_sec": 60.0,
+        "planned_requests": 120,
+        "actual_completed": 119,
+        "sustained_rps": 1.98,
+        "pacing_lag_pct": 0.96,
+        "max_p95_latency_ms": 25.78
+      },
+      "burst": {
+        "duration_sec": 120.0,
+        "planned_requests": 2160,
+        "actual_completed": 2160,
+        "sustained_rps": 18.0,
+        "pacing_lag_pct": 0.09,
+        "max_p95_latency_ms": 25.67
+      },
+      "cooldown": {
+        "duration_sec": 120.0,
+        "planned_requests": 240,
+        "actual_completed": 241,
+        "sustained_rps": 2.01,
+        "pacing_lag_pct": 0.03,
+        "max_p95_latency_ms": 18.64
+      }
+    }
+  },
+  "Approach B": {
+    "approach": "Approach B",
+    "status": "NO_DATA"
+  },
+  "Approach C": {
+    "approach": "Approach C",
+    "status": "NO_DATA"
+  }
+}

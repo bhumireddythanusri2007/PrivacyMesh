@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workload-controller
+  namespace: privacymesh
+  labels:
+    app.kubernetes.io/name: privacymesh
+    app.kubernetes.io/component: workload-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: privacymesh
+      app.kubernetes.io/component: workload-controller
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: privacymesh
+        app.kubernetes.io/component: workload-controller
+    spec:
+      serviceAccountName: privacymesh-scaling-controller
+      containers:
+        - name: controller
+          image: privacymesh-workload-controller:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: metrics
+              containerPort: 8081
+          env:
+            - name: PREDICTOR_URL
+              value: "http://workload-predictor:8080"
+            - name: SCALING_PREDICTION_SOURCE
+              value: "persistence_baseline"
+            - name: RECONCILE_INTERVAL_SECONDS
+              value: "15"
+            - name: SCALE_DOWN_COOLDOWN_SECONDS
+              value: "60"
+            - name: HPA_NAME
+              value: "backend-hpa"
+            - name: HPA_NAMESPACE
+              value: "privacymesh"
+            - name: THRESHOLD_REPLICAS_2
+              value: "15.0"
+            - name: THRESHOLD_REPLICAS_3
+              value: "30.0"
+            - name: THRESHOLD_REPLICAS_4
+              value: "45.0"
+            - name: ABSOLUTE_MIN_REPLICAS
+              value: "1"
+            - name: ABSOLUTE_MAX_REPLICAS
+              value: "4"
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: workload-controller
+  namespace: privacymesh
+  labels:
+    app.kubernetes.io/name: privacymesh
+    app.kubernetes.io/component: workload-controller
+spec:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 8081
+      targetPort: 8081
+  selector:
+    app.kubernetes.io/name: privacymesh
+    app.kubernetes.io/component: workload-controller

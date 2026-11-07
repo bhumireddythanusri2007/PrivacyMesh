@@ -120,8 +120,8 @@ export const KYCView: FC<KYCViewProps> = ({ user, onOpenAuth }) => {
         <div>
           <h3 className="text-xl font-bold tracking-tight text-slate-900">KYC Verification Records</h3>
           <p className="mt-0.5 text-xs text-slate-500">
-            {user.role === 'admin'
-              ? 'Administrator View: Access to all customer verification records across tenants'
+            {user.role === 'admin' || user.role === 'bank_manager' || user.role === 'bank_employee'
+              ? 'Bank Staff View: Access to all customer verification records across tenants'
               : 'User View: Inspect and register your permitted customer identity dossiers'}
           </p>
         </div>

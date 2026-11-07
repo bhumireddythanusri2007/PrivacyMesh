@@ -20,6 +20,12 @@ def create_kyc_record(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    if current_user["role"] not in ("customer", "user"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only customers can submit KYC records",
+        )
+
     trimmed_ref = customer_ref.strip()
     trimmed_doc = document_type.strip()
 
@@ -50,8 +56,8 @@ def create_kyc_record(
     )
 
     db.add(record)
+    db.flush()
     db.commit()
-    db.refresh(record)
 
     return record
 
@@ -61,11 +67,17 @@ def get_kyc_records(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    # System Administrators are strictly isolated from customer KYC records
+    if current_user["role"] == "system_admin":
+        return []
+
     query = db.query(KYCRecord)
 
-    # Admins can view all KYC records.
-    # Regular users can view only their own records.
-    if current_user["role"] != "admin":
+    # Bank Staff (Employee, Manager, legacy admin) can view records
+    # Customers can view only their own records
+    if current_user["role"] in ("bank_employee", "bank_manager", "admin"):
+        pass
+    else:
         query = query.filter(
             KYCRecord.user_id == current_user["id"]
         )

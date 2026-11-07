@@ -14,6 +14,9 @@ class HardwareDetectionReport(BaseModel):
     driver_initialized: bool
     attestation_configured: bool
     detection_summary: str
+    azure_environment_detected: bool = False
+    azure_cvm_sku_detected: str | None = None
+    vtpm_device_found: bool = False
 
 
 class DataTriadStatus(BaseModel):

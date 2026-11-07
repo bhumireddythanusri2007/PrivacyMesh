@@ -7,3 +7,29 @@ __pycache__/
 .vscode/
 .pytest_cache/
 *.bak
+
+# Database Backups & Dumps
+database/backups/
+*.dump
+*.backup
+
+# Kubernetes Secrets (never commit credentials)
+kubernetes/01-secrets.yaml
+kubernetes/*secret*.yaml
+!kubernetes/01-secrets.yaml.example
+
+# Local-only cloud deployment files
+azure/
+
+# Temporary analysis and browser verification artifacts
+scratch/
+deploy_fix.ps1
+test_browser_cdp.js
+test_browser_cdp2.js
+test_browser_cdp3.js
+test_cdp.js
+
+# Temporary website review files
+PrivacyMesh-fix-files.zip
+PrivacyMesh-fixes.zip
+PrivacyMesh-fixes/
